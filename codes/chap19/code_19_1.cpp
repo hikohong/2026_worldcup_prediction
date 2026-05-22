@@ -2,7 +2,7 @@
 #include <vector>
 using namespace std;
 
-// 最小二乗法によって回帰直線 y = a*x + b の係数 (a, b) を求める
+// 用最小二乘法求回歸直線 y = a*x + b 的係數 (a, b)
 pair<double, double> linear_regression(const vector<double>& x, const vector<double>& y) {
     int n = x.size();
     double sum_x = 0, sum_y = 0, sum_xy = 0, sum_x2 = 0;
@@ -19,7 +19,7 @@ pair<double, double> linear_regression(const vector<double>& x, const vector<dou
 }
 
 int main() {
-    // データ点数と予測したい x の値を入力
+    // 輸入資料點數與欲預測的 x 值
     int n;
     double future_x;
     cin >> n >> future_x;
@@ -27,12 +27,12 @@ int main() {
     vector<double> x(n), y(n);
     for (int i = 0; i < n; ++i) cin >> x[i] >> y[i];
 
-    // 線形回帰で係数を求める
+    // 以線性回歸求係數
     auto [a, b] = linear_regression(x, y);
 
-    // 未来の値を予測
+    // 預測未來值
     double predicted = a * future_x + b;
 
-    cout << "回帰直線: y = " << a << " * x + " << b << endl;
-    cout << "x = " << future_x << " のときの予測値: " << predicted << endl;
+    cout << "回歸直線: y = " << a << " * x + " << b << endl;
+    cout << "x = " << future_x << " 時的預測值: " << predicted << endl;
 }

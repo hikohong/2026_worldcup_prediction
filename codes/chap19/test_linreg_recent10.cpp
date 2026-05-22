@@ -12,14 +12,14 @@ const int WC_YEARS[] = {
     2002,2006,2010,2014,2018,2022
 };
 const int NUM_WC = 22;
-const int WINDOW  = 10; // 直近10大会
+const int WINDOW  = 10; // 最近10屆
 
 struct Team {
     string name;
     vector<double> s;
 };
 
-// 最小二乗法 (x=0,1,...,n-1 の等間隔インデックス)
+// 最小二乘法（x=0,1,...,n-1 的等距索引）
 pair<double,double> linear_regression(const vector<double>& y) {
     int n = y.size();
     double sx=0, sy=0, sxy=0, sx2=0;
@@ -43,29 +43,29 @@ int main() {
         {"Spain",     {3,3,0,4,1,0,1,1,0,1,1,2,3,2,3,1,3,2,7,1,2,3}},
     };
 
-    int from = NUM_WC - WINDOW; // 直近10大会の開始インデックス
+    int from = NUM_WC - WINDOW; // 最近10屆的起始索引
 
     cout << fixed << setprecision(3);
     cout << "================================================\n";
-    cout << " 直近10大会 (";
+    cout << " 最近10屆 (";
     cout << WC_YEARS[from] << "–" << WC_YEARS[NUM_WC-1];
-    cout << ") 線形回帰テスト\n";
+    cout << ") 線性回歸測試\n";
     cout << "================================================\n\n";
 
-    // ヘッダ
-    cout << left << setw(11) << "チーム";
+    // 表頭
+    cout << left << setw(11) << "隊伍";
     for (int i = from; i < NUM_WC; ++i)
         cout << right << setw(5) << WC_YEARS[i];
-    cout << right << setw(9) << "傾き(a)"
-         << setw(10) << "切片(b)"
-         << setw(12) << "2026予測" << "\n";
+    cout << right << setw(9) << "斜率(a)"
+         << setw(10) << "截距(b)"
+         << setw(12) << "2026預測" << "\n";
     cout << string(110, '-') << "\n";
 
     for (auto& t : teams) {
-        // 直近 WINDOW 点を切り出す
+        // 截取最近 WINDOW 個資料點
         vector<double> win(t.s.begin() + from, t.s.end());
         auto [a, b] = linear_regression(win);
-        double pred = a * WINDOW + b; // 次の点 (インデックス=WINDOW) を予測
+        double pred = a * WINDOW + b; // 預測下一點（索引=WINDOW）
         pred = max(0.0, pred);
 
         cout << left << setw(11) << t.name;
@@ -76,12 +76,12 @@ int main() {
              << setw(10) << b
              << setw(12) << pred << "\n";
 
-        // 回帰直線と各大会の残差
+        // 回歸直線與各屆殘差
         cout << setw(11) << "";
-        cout << "  回帰直線: y = " << a << " * x + " << b << "\n";
+        cout << "  回歸直線: y = " << a << " * x + " << b << "\n";
 
         cout << setw(11) << "";
-        cout << "  残差: ";
+        cout << "  殘差: ";
         for (int i = 0; i < WINDOW; ++i) {
             double fitted = a * i + b;
             double resid  = win[i] - fitted;
@@ -92,7 +92,7 @@ int main() {
     }
 
     cout << "================================================\n";
-    cout << " 2026 優勝スコア予測 (線形回帰のみ)\n";
+    cout << " 2026 奪冠分數預測（僅線性回歸）\n";
     cout << "================================================\n";
 
     vector<pair<double,string>> ranking;
@@ -106,10 +106,10 @@ int main() {
     }
     sort(ranking.rbegin(), ranking.rend());
 
-    cout << setw(6) << "順位"
-         << setw(12) << "チーム"
-         << setw(12) << "予測スコア"
-         << setw(10) << "優勝確率" << "\n";
+    cout << setw(6) << "排名"
+         << setw(12) << "隊伍"
+         << setw(12) << "預測分數"
+         << setw(10) << "奪冠機率" << "\n";
     cout << string(40, '-') << "\n";
     int rank = 1;
     for (auto& [score, name] : ranking) {
@@ -118,7 +118,7 @@ int main() {
              << setw(12) << score
              << setw(9) << score/total*100 << "%" << "\n";
     }
-    cout << "\n注意: 線形回帰のみによる予測。他の統計手法と組み合わせると精度が向上します。\n";
+    cout << "\n注意：僅為線性回歸的預測結果，與其他統計方法結合可提高精度。\n";
 
     return 0;
 }

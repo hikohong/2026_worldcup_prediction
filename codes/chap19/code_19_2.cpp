@@ -2,7 +2,7 @@
 #include <vector>
 using namespace std;
 
-// 直近 k 個の値の単純移動平均を求め，次の値を予測する
+// 計算最近 k 個值的簡單移動平均，並以此預測下一個值
 vector<double> moving_average(const vector<double>& data, int k) {
     int n = data.size();
     vector<double> ma;
@@ -23,11 +23,11 @@ int main() {
 
     vector<double> ma = moving_average(data, k);
 
-    cout << "移動平均 (窓幅 k = " << k << "):" << endl;
+    cout << "移動平均 (視窗大小 k = " << k << "):" << endl;
     for (int i = 0; i < (int)ma.size(); ++i) {
-        cout << "  区間 [" << i << ", " << i + k - 1 << "] の平均: " << ma[i] << endl;
+        cout << "  區間 [" << i << ", " << i + k - 1 << "] 的平均: " << ma[i] << endl;
     }
 
-    // 最後の移動平均値を次のステップの予測値とする
-    cout << "次のステップの予測値: " << ma.back() << endl;
+    // 以最後一個移動平均值作為下一步的預測值
+    cout << "下一步的預測值: " << ma.back() << endl;
 }
