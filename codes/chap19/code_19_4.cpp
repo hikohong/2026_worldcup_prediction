@@ -8,8 +8,8 @@
 
 using namespace std;
 
-// 表現スコア定義
-// 7=優勝, 6=準優勝, 5=3位, 4=4位, 3=ベスト8, 2=ベスト16, 1=グループ敗退, 0=不参加/予選落ち
+// 表現分數定義
+// 7=冠軍, 6=亞軍, 5=第三名, 4=第四名, 3=八強, 2=十六強, 1=小組出局, 0=未參賽/預選賽落敗
 
 const int NUM_WC = 22;
 
@@ -21,29 +21,29 @@ const int WC_YEARS[NUM_WC] = {
 
 struct Team {
     string name;
-    vector<double> s; // スコア列
+    vector<double> s; // 分數序列
 };
 
-// ======== 3種モデル ========
-// 線形回帰: s[from..n-1] の window 点で係数を求め, 次の点を予測
-// window=0 の場合は全点を使用
+// ======== 三種預測模型 ========
+// 線性回歸：用 s[from..n-1] 的 window 個點求係數，預測下一點
+// window=0 時使用全部資料點
 
 double pred_linear(const vector<double>& s, int n, int window = 0) {
     int from = (window > 0) ? max(0, n - window) : 0;
     int cnt = n - from;
     double sx=0, sy=0, sxy=0, sx2=0;
     for (int i = from; i < n; ++i) {
-        double xi = i - from; // ローカルインデックス 0,1,...,cnt-1
+        double xi = i - from; // 區域索引 0,1,...,cnt-1
         sx += xi; sy += s[i]; sxy += xi*s[i]; sx2 += xi*xi;
     }
     double D = cnt*sx2 - sx*sx;
     if (fabs(D) < 1e-9) return sy / cnt;
     double a = (cnt*sxy - sx*sy) / D;
     double b = (sy - a*sx) / cnt;
-    return a*cnt + b; // 次の点 (ローカルインデックス = cnt) を予測
+    return a*cnt + b; // 預測下一點（區域索引 = cnt）
 }
 
-// 移動平均: 直近 window 点の平均
+// 移動平均：最近 window 個點的平均
 
 double pred_ma(const vector<double>& s, int n, int window) {
     int from = max(0, n - window);
@@ -52,7 +52,7 @@ double pred_ma(const vector<double>& s, int n, int window) {
     return sum / (n - from);
 }
 
-// 指数平滑化: S_t = alpha*y_t + (1-alpha)*S_{t-1}, 最後の平滑値を予測値とする
+// 指數平滑化：S_t = alpha*y_t + (1-alpha)*S_{t-1}，以最後的平滑值作為預測值
 
 double pred_exp(const vector<double>& s, int n, double alpha) {
     double sm = s[0];
@@ -60,13 +60,13 @@ double pred_exp(const vector<double>& s, int n, double alpha) {
     return sm;
 }
 
-// ======== MSE 計算 (後 k 試合でクロスバリデーション) ========
+// ======== MSE 計算（以最後 k 屆進行交叉驗證）========
 
 struct MSEResult {
     double lin, ma3, ma4, exp03, exp05;
     string best_name() const {
         vector<pair<double,string>> v = {
-            {lin,"線形回帰"},{ma3,"MA(3)"},{ma4,"MA(4)"},
+            {lin,"線性回歸"},{ma3,"MA(3)"},{ma4,"MA(4)"},
             {exp03,"Exp(α=0.3)"},{exp05,"Exp(α=0.5)"}
         };
         return min_element(v.begin(), v.end())->second;
@@ -76,7 +76,7 @@ struct MSEResult {
     }
 };
 
-// window=10: 線形回帰は直近10屆のみ使用
+// window=10：線性回歸僅使用最近10屆資料
 
 const int LIN_WINDOW = 10;
 
@@ -86,9 +86,9 @@ MSEResult compute_mse(const vector<double>& s, int k = 5) {
     for (int i = n-k; i < n; ++i) {
         double actual = s[i];
         auto sq = [](double x){ return x*x; };
-        m.lin += sq(actual - pred_linear(s, i, LIN_WINDOW));
-        m.ma3 += sq(actual - pred_ma(s, i, 3));
-        m.ma4 += sq(actual - pred_ma(s, i, 4));
+        m.lin   += sq(actual - pred_linear(s, i, LIN_WINDOW));
+        m.ma3   += sq(actual - pred_ma(s, i, 3));
+        m.ma4   += sq(actual - pred_ma(s, i, 4));
         m.exp03 += sq(actual - pred_exp(s, i, 0.3));
         m.exp05 += sq(actual - pred_exp(s, i, 0.5));
     }
@@ -96,13 +96,13 @@ MSEResult compute_mse(const vector<double>& s, int k = 5) {
     return m;
 }
 
-// 最良モデルで 2026 を予測
+// 以最佳模型預測 2026 年結果
 
 double predict_2026(const vector<double>& s, const MSEResult& m) {
     int n = s.size();
     string best = m.best_name();
     double p;
-    if (best == "線形回帰") p = pred_linear(s, n, LIN_WINDOW);
+    if (best == "線性回歸")   p = pred_linear(s, n, LIN_WINDOW);
     else if (best == "MA(3)") p = pred_ma(s, n, 3);
     else if (best == "MA(4)") p = pred_ma(s, n, 4);
     else if (best == "Exp(α=0.3)") p = pred_exp(s, n, 0.3);
@@ -111,31 +111,31 @@ double predict_2026(const vector<double>& s, const MSEResult& m) {
 }
 
 int main() {
-    // ======== 歴史データ (1930-2022, 22大会) ========
+    // ======== 歷史資料（1930-2022，共22屆）========
     vector<Team> teams = {
-        // Brazil: 全大会参加 (5回優勝)
+        // Brazil：參加全部屆次（5次奪冠）
         {"Brazil", {5,2,5,6,3,7,7,1,7,4,5,2,3,2,7,6,7,3,3,4,3,3}},
-        // Germany/W.Germany: 1930不参加, 1950出場禁止 (4回優勝)
+        // Germany/W.Germany：1930未參加，1950禁賽（4次奪冠）
         {"Germany", {0,5,2,0,7,4,3,6,5,7,2,6,6,7,3,3,6,5,5,7,1,1}},
-        // Argentina (3回優勝)
+        // Argentina（3次奪冠）
         {"Argentina", {6,2,0,0,0,1,1,3,0,2,7,2,7,6,2,3,1,3,3,6,2,7}},
-        // France (2回優勝)
+        // France（2次奪冠）
         {"France", {1,2,3,0,1,5,0,1,0,1,1,4,5,0,0,7,1,6,1,3,7,6}},
-        // Italy (4回優勝, 2018/2022予選落ち)
+        // Italy（4次奪冠，2018/2022預選賽落敗）
         {"Italy", {0,7,7,1,1,0,1,1,6,1,4,7,2,5,6,3,2,7,1,1,0,0}},
-        // Spain (1回優勝)
+        // Spain（1次奪冠）
         {"Spain", {3,3,0,4,1,0,1,1,0,1,1,2,3,2,3,1,3,2,7,1,2,3}},
     };
 
     cout << fixed << setprecision(2);
     cout << "========================================\n";
-    cout << " FIFA ワールドカップ 歴史データ分析\n";
-    cout << " スコア: 7=優勝 6=準V 5=3位 4=4位\n";
-    cout << " 3=8強 2=16強 1=GS敗退 0=不参加\n";
+    cout << " FIFA 世界盃歷史資料分析\n";
+    cout << " 分數: 7=冠軍 6=亞軍 5=第三名 4=第四名\n";
+    cout << " 3=八強 2=十六強 1=小組出局 0=未參賽\n";
     cout << "========================================\n\n";
 
-    // 歴史スコア一覧
-    cout << setw(6) << "年";
+    // 歷史分數一覽
+    cout << setw(6) << "年份";
     for (auto& t : teams) cout << setw(11) << t.name;
     cout << "\n" << string(72, '-') << "\n";
     for (int i = 0; i < NUM_WC; ++i) {
@@ -144,7 +144,7 @@ int main() {
         cout << "\n";
     }
 
-    // 平均・最大
+    // 平均與最高分
     cout << string(72, '-') << "\n";
     cout << setw(6) << "平均";
     for (auto& t : teams) {
@@ -152,15 +152,15 @@ int main() {
         cout << setw(11) << avg;
     }
     cout << "\n";
-    cout << setw(6) << "最大";
+    cout << setw(6) << "最高";
     for (auto& t : teams) cout << setw(11) << (int)*max_element(t.s.begin(), t.s.end());
     cout << "\n\n";
 
-    // 直近5大会の勝率曲線 (2002-2022)
+    // 近5屆表現趨勢（2002-2022）
     cout << "========================================\n";
-    cout << " 直近5大会 表現推移 (2002-2022)\n";
+    cout << " 近5屆表現趨勢 (2002-2022)\n";
     cout << "========================================\n";
-    cout << setw(6) << "年";
+    cout << setw(6) << "年份";
     for (auto& t : teams) cout << setw(11) << t.name;
     cout << "\n";
     for (int i = NUM_WC-5; i < NUM_WC; ++i) {
@@ -169,18 +169,18 @@ int main() {
         cout << "\n";
     }
 
-    // MSE クロスバリデーション
+    // MSE 交叉驗證
     cout << "\n========================================\n";
-    cout << " モデル別 MSE (後5大会クロスバリデーション)\n";
-    cout << " ※ 小さいほど実績データへの適合度が高い\n";
+    cout << " 各模型 MSE（近5屆交叉驗證）\n";
+    cout << " ※ 數值越小表示對歷史資料的擬合度越高\n";
     cout << "========================================\n";
-    cout << setw(11) << "チーム"
-        << setw(13) << "線形回帰(10屆)"
+    cout << setw(11) << "隊伍"
+        << setw(13) << "線性回歸(10屆)"
         << setw(7) << "MA(3)"
         << setw(7) << "MA(4)"
         << setw(10) << "Exp(0.3)"
         << setw(10) << "Exp(0.5)"
-        << setw(12) << "最良モデル" << "\n";
+        << setw(12) << "最佳模型" << "\n";
     cout << string(66, '-') << "\n";
 
     vector<MSEResult> mse_results;
@@ -196,9 +196,9 @@ int main() {
             << setw(12) << m.best_name() << "\n";
     }
 
-    // 2026 予測
+    // 2026 預測
     cout << "\n========================================\n";
-    cout << " 2026 ワールドカップ 優勝確率予測\n";
+    cout << " 2026 世界盃奪冠機率預測\n";
     cout << "========================================\n";
     vector<pair<double,int>> ranked;
     vector<double> raw_pred;
@@ -212,11 +212,11 @@ int main() {
     double total = accumulate(raw_pred.begin(), raw_pred.end(), 0.0);
     if (total < 1e-9) total = 1.0;
 
-    cout << setw(4) << "順位"
-        << setw(11) << "チーム"
-        << setw(12) << "予測スコア"
-        << setw(10) << "優勝確率"
-        << setw(14) << "使用モデル" << "\n";
+    cout << setw(4) << "排名"
+        << setw(11) << "隊伍"
+        << setw(12) << "預測分數"
+        << setw(10) << "奪冠機率"
+        << setw(14) << "使用模型" << "\n";
     cout << string(51, '-') << "\n";
     for (int rank = 0; rank < (int)ranked.size(); ++rank) {
         auto [score, idx] = ranked[rank];
@@ -228,8 +228,8 @@ int main() {
             << setw(14) << mse_results[idx].best_name() << "\n";
     }
 
-    cout << "\n注意: 本予測は過去の表現スコアのみに基づく統計モデルです。\n";
-    cout << " 選手コンディション・組み合わせ・戦術は考慮していません。\n";
+    cout << "\n注意：本預測僅基於過去表現分數的統計模型。\n";
+    cout << " 未考慮球員狀態、賽程抽籤及戰術等因素。\n";
 
     return 0;
 }
