@@ -15,4 +15,5 @@
 | [chap19/test_new_methods.cpp](chap19/test_new_methods.cpp) | 三種新演算法（加權線性回歸、多項式回歸、自動調參ES） |
 | [chap19/backtest_10.cpp](chap19/backtest_10.cpp) | 8方法 × 6隊 × 10屆回測 MSE/MAE 比較 |
 | [chap19/predict_2026_top3.cpp](chap19/predict_2026_top3.cpp) | 回測最佳前三方法的 2026 預測 |
+| [chap19/predict_2026_full.cpp](chap19/predict_2026_full.cpp) | 完整因素預測：歷史統計 × 球員陣容 × 賽程抽籤 × 教練戰術 × 主場優勢 |
 | [chap19/test_loop.cpp](chap19/test_loop.cpp) | Loop 測試（7群組，37 個） |
